@@ -44,6 +44,7 @@ class RolloutBuffer:
         Args:
             last_value (torch.Tensor): The value prediction of the last state
                                        in the trajectory, or 0 if the episode ended.
+                                       This tensor is expected to be a 1D tensor of size 1 (e.g., torch.Size([1])).
         """
         # Convert lists to tensors for computation
         rewards = torch.tensor(self.rewards, dtype=torch.float32, device=self.config.DEVICE)
@@ -51,10 +52,9 @@ class RolloutBuffer:
         dones = torch.tensor(self.dones, dtype=torch.bool, device=self.config.DEVICE)
 
         # Initialize advantage and return tensors
-        # Add the last value to the end of the values tensor for computation
-        # If the episode truly ended (done is True), the last_value should be 0.
-        # Otherwise, it's the critic's prediction for the last state.
-        extended_values = torch.cat((values, last_value.unsqueeze(0)))
+        # Concatenate values with the last_value for GAE calculation.
+        # Both 'values' and 'last_value' should now be 1D tensors, making concatenation smooth.
+        extended_values = torch.cat((values, last_value)) # FIX: Removed .unsqueeze(0) here
         
         # GAE calculation
         advantages = torch.zeros_like(rewards, device=self.config.DEVICE)
@@ -62,21 +62,22 @@ class RolloutBuffer:
 
         # Iterate backward through the trajectory to compute GAE
         for t in reversed(range(len(rewards))):
+            # Determine the value of the next state (V(s_{t+1}))
             # If the episode ended at this step, next_value is 0 for reward calculation
             # and the GAE term is reset.
-            if t == len(rewards) - 1: # Last step in the current segment
-                next_non_terminal = 1.0 - dones[-1].float()
-                next_value = last_value
-            else: # Not the last step in the segment
-                next_non_terminal = 1.0 - dones[t+1].float()
-                next_value = extended_values[t+2] # extended_values includes last_value at the end
+            if dones[t]: # If the episode terminated at this step 't'
+                next_non_terminal = 0.0
+                next_value = torch.tensor(0.0, device=self.config.DEVICE) # No future value if done
+            else: # Episode did not terminate, use value of next state
+                next_non_terminal = 1.0
+                # FIX: Index should be t+1 for the next value in extended_values
+                # extended_values contains values[0...N-1] and last_value at N
+                next_value = extended_values[t+1] 
 
-            # TD error (delta)
-            # δ_t = r_t + γ * V(s_{t+1}) * (1 - done_{t+1}) - V(s_t)
+            # TD error (delta_t) = r_t + gamma * V(s_{t+1}) * (1 - done_{t+1}) - V(s_t)
             delta = rewards[t] + self.config.GAMMA * next_value * next_non_terminal - values[t]
             
-            # A_t = δ_t + γ * λ * A_{t+1} * (1 - done_{t+1})
-            # (1 - done_{t+1}) term handles episode termination properly
+            # GAE (A_t) = delta_t + gamma * lambda * A_{t+1} * (1 - done_{t+1})
             advantages[t] = last_gae_lam = delta + self.config.GAMMA * self.config.GAE_LAMBDA * next_non_terminal * last_gae_lam
         
         # Calculate returns (target values for the critic)
@@ -85,6 +86,7 @@ class RolloutBuffer:
         self.advantages = advantages
         
         # Normalize advantages to stabilize training. This is a common practice.
+        # Add a small epsilon for numerical stability to prevent division by zero
         self.advantages = (self.advantages - self.advantages.mean()) / (self.advantages.std() + 1e-8)
 
 

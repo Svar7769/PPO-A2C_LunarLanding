@@ -4,7 +4,7 @@ import torch
 
 class PPOConfig:
     # Environment
-    ENV_NAME = "LunarLanderContinuous-v2"
+    ENV_NAME = "LunarLanderContinuous-v3"
     SEED = 42
 
     # Training

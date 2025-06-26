@@ -1,6 +1,5 @@
 # ppo_project/requirements.txt
-gymnasium==0.29.1
-torch==2.3.1
-numpy==1.26.4
-tensorboard==2.16.2
+torch
+numpy
+tensorboard
 gymnasium[box2d]
