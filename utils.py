@@ -23,9 +23,17 @@ def set_seeds(seed):
     torch.backends.cudnn.benchmark = False
     print(f"Random seeds set to {seed}")
 
-def make_env(env_name, seed):
-    """Helper function to create and seed an environment."""
-    env = gym.make(env_name)
+def make_env(env_name, seed, render_mode="human"): # ADDED render_mode parameter
+    """
+    Helper function to create and seed an environment.
+    Args:
+        env_name (str): Name of the Gymnasium environment.
+        seed (int): Seed for environment randomness.
+        render_mode (str, optional): The render_mode to pass to gym.make().
+                                     Common values: "human", "rgb_array".
+                                     Defaults to None (no rendering).
+    """
+    env = gym.make(env_name, render_mode=render_mode) # Pass render_mode here
     env.action_space.seed(seed)
     env.observation_space.seed(seed)
     return env
