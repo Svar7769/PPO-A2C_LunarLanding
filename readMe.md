@@ -1,6 +1,6 @@
 Proximal Policy Optimization (PPO) and Advantage Actor-Critic (A2C) Implementation
 
-This project presents clean, modular implementations of two prominent reinforcement learning algorithms: Proximal Policy Optimization (PPO) and Advantage Actor-Critic (A2C). Applied to continuous control tasks within the OpenAI Gymnasium environment, this project aims to provide a foundational understanding of core RL mechanics and demonstrate their practical application on challenging benchmark environments.
+This project presents clean, modular implementations of two prominent reinforcement learning algorithms: Proximal Policy Optimization (PPO) and Advantage Actor-Critic (A2C). Applied to continuous control tasks within the OpenAI Gymnasium environment (specifically LunarLanderContinuous-v3), this project aims to provide a foundational understanding of core RL mechanics and demonstrate their practical application on challenging benchmark environments.
 Features
 
     PPO Algorithm: Full implementation of the PPO algorithm including:
@@ -53,7 +53,7 @@ Steps
     git clone https://github.com/Svar7769/PPO-A2C_LunarLanding.git
     cd ppo_project
 
-    If not using Git, manually create the ppo_project directory and all the .py files within it as provided in the previous steps.
+    If not using Git, manually create the ppo_project directory and all the .py files within it as provided in the project structure.
 
     Create and activate a Python virtual environment:
 
@@ -120,9 +120,11 @@ First, ensure you have a trained model saved in the trained_models/ directory.
     Comment out agent.train() and uncomment the agent.evaluate() call. If you want to load a specific model, add a load_model call before evaluate.
 
     # ppo_project/main.py (example modification for evaluation)
-    # ...
+
+    # ... (config and directory creation) ...
+
     def main():
-        # ... (config and directory creation) ...
+        # ... (argument parsing and config setup) ...
 
         # Decide which agent type to instantiate (PPO or A2C) based on --algo
         # The config parameters for N_EPOCHS and MINIBATCH_SIZE will be set
@@ -145,11 +147,11 @@ First, ensure you have a trained model saved in the trained_models/ directory.
         # To load a specific model for evaluation:
         # Replace 'a2c' or 'ppo' and '1000000' with your saved model's name and step
         # model_path = os.path.join(config.SAVE_DIR, f"{args.algo}_agent_step_1000000.pth")
-        # agent.load_model(model_path) 
+        # agent.load_model(model_path)
 
         # Evaluate the agent (set render=True to visualize)
         # Note: Rendering for Box2D environments (like LunarLander) requires an X server on Linux/WSL.
-        agent.evaluate(num_episodes=10, render=True) 
+        agent.evaluate(num_episodes=10, render=True)
     # ...
 
     Run python main.py --algo <your_algorithm> again (e.g., --algo ppo or --algo a2c).
